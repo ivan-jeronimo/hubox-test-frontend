@@ -1,5 +1,5 @@
 <template>
-  <div class="main-layout h-full flex container__page pl-0 pr-0">
+  <div class="main-layout">
     <AppHeader />
 
     <main id="main-content" role="main" class="main-container grid surface-ground mx-auto">
@@ -49,7 +49,7 @@
             <div v-else-if="step === 'otp'" class="form-wrapper">
               <OtpVerification
                 :email="userData.email"
-                :name="userData.name"
+                :firstName="userData.firstName"
                 @verification-success="handleVerificationSuccess"
               />
             </div>
@@ -72,6 +72,9 @@
 
 <script>
 import { ref, reactive } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '../stores/auth';
+import { apiService } from '../services/apiService'; // Importar apiService para getProfile
 import AppHeader from '../components/layout/AppHeader.vue';
 import AppFooter from '../components/layout/AppFooter.vue';
 import RegisterForm from '../components/auth/RegisterForm.vue';
@@ -86,26 +89,42 @@ export default {
     OtpVerification
   },
   setup() {
+    const router = useRouter();
+    const authStore = useAuthStore();
     const step = ref('landing');
 
     const userData = reactive({
-      name: '',
+      firstName: '',
       email: ''
     });
 
     const handleRegisterSuccess = (data) => {
-      userData.name = data.name;
+      userData.firstName = data.name; // El evento emite 'name', pero es el firstName
       userData.email = data.email;
       step.value = 'otp';
     };
 
-    const handleVerificationSuccess = (data) => {
-      console.log('Token recibido:', data.access_token);
-      console.log('Usuario:', data.user);
+    const handleVerificationSuccess = async (data) => {
+      console.log('Token recibido:', data.accessToken); // Acceder a data.accessToken
 
-      localStorage.setItem('access_token', data.access_token);
-      alert('¡Autenticado con éxito!');
-      step.value = 'landing'; // Retorna al inicio como placeholder
+      // Guardar solo el token inicialmente en el store
+      authStore.setAuth(null, data.accessToken); // user es null por ahora
+
+      try {
+        // Obtener los datos completos del usuario con una llamada adicional
+        const userProfile = await apiService.user.getProfile();
+        console.log('Perfil de usuario obtenido:', userProfile);
+        // Actualizar el store con el usuario completo
+        authStore.setUser(userProfile);
+
+        router.push({ name: 'profile' });
+      } catch (error) {
+        console.error("Error al obtener el perfil del usuario después de la verificación:", error);
+        // Si falla la obtención del perfil, limpiar el token y redirigir a home
+        authStore.logout();
+        alert('Error al cargar el perfil. Por favor, intente de nuevo.');
+        router.push({ name: 'home' });
+      }
     };
 
     return {
@@ -126,7 +145,7 @@ export default {
 .main-layout {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  min-height: 100vh; /* Todo el layout toma al menos el alto de la pantalla */
   width: 100%;
 }
 

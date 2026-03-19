@@ -1,18 +1,34 @@
 <template>
   <header role="banner" class="custom-header">
     <svg viewBox="0 0 500 80" preserveAspectRatio="none" aria-hidden="true" class="header-curve">
-      <!-- El path ahora dibuja el área superior (azul) y deja vacío el resto -->
       <path d="M0,0 L500,0 L500,50 Q250,80 0,50 Z" fill="#002855"></path>
     </svg>
     <div class="logo-container">
-      <img class="cursor-pointer logo-img" src="https://placehold.co/150x40/transparent/white?text=LOGO" alt="Logo" />
+      <!-- Usamos router-link para navegar a la página principal -->
+      <router-link to="/">
+        <img class="cursor-pointer logo-img" src="https://placehold.co/150x40/transparent/white?text=LOGO" alt="Logo" />
+      </router-link>
     </div>
   </header>
 </template>
 
 <script>
+import { useRouter } from 'vue-router'; // Importar useRouter si se necesita lógica de navegación programática
+
 export default {
-  name: 'AppHeader'
+  name: 'AppHeader',
+  setup() {
+    const router = useRouter(); // Opcional: si necesitas navegar programáticamente
+
+    // Puedes añadir un método para navegar si el router-link no es suficiente
+    const goToHome = () => {
+      router.push('/');
+    };
+
+    return {
+      goToHome // Exportar si se usa en el template
+    };
+  }
 };
 </script>
 
@@ -23,7 +39,6 @@ export default {
   left: 0;
   width: 100%;
   height: 100px;
-  /* Eliminamos el background-color sólido del header para que sea transparente */
   background-color: transparent;
   z-index: 1000;
   pointer-events: none; /* Para que la parte transparente no bloquee clics debajo */

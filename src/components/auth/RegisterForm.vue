@@ -2,12 +2,12 @@
   <div class="fade-in">
     <form @submit.prevent="submitRegister">
       <div class="form-group">
-        <label for="name">Nombre Principal:</label>
+        <label for="firstName">Nombre Principal:</label>
         <input
-          id="name"
-          v-model="form.name"
+          id="firstName"
+          v-model="form.firstName"
           type="text"
-          placeholder="Ej. Juan Perez"
+          placeholder="Ej. Juan Pablo"
           required
         />
       </div>
@@ -51,12 +51,12 @@ export default {
   name: 'RegisterForm',
   emits: ['register-success', 'cancel'],
   setup(props, { emit }) {
-    const form = reactive({ name: '', email: '' });
+    const form = reactive({ firstName: '', email: '' }); // Cambiado 'name' a 'firstName'
     const isLoading = ref(false);
     const error = ref('');
 
     const isValid = computed(() => {
-      return form.name.trim() !== '' && form.email.trim() !== '';
+      return form.firstName.trim() !== '' && form.email.trim() !== ''; // Validar firstName
     });
 
     const submitRegister = async () => {
@@ -64,9 +64,12 @@ export default {
       error.value = '';
 
       try {
-        // Usar apiService.auth.registerStart con el payload completo
-        await apiService.auth.registerStart(form);
-        emit('register-success', { name: form.name, email: form.email });
+        // Usar apiService.auth.registerStart con el payload correcto
+        await apiService.auth.registerStart({
+          firstName: form.firstName, // Enviar firstName
+          email: form.email
+        });
+        emit('register-success', { name: form.firstName, email: form.email }); // Emitir firstName como 'name' para compatibilidad
       } catch (err) {
         console.error("Error al registrar:", err);
         error.value = err.message || 'Ocurrió un error al procesar la solicitud.';

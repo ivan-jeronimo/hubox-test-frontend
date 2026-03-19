@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useAuthStore } from '../stores/auth'; // Importar el store de autenticación
 
 // Define la URL base de la API. En Vite, se accede a las variables de entorno con import.meta.env
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
@@ -20,10 +21,9 @@ api.interceptors.request.use(
   (config) => {
     config.startTime = Date.now(); // Registrar tiempo de inicio
     
-    // Simulación de authStore: obtener token de localStorage
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    const authStore = useAuthStore(); // Obtener la instancia del store
+    if (authStore.token) {
+      config.headers.Authorization = `Bearer ${authStore.token}`;
     }
     return config;
   },
@@ -43,6 +43,7 @@ api.interceptors.response.use(
     }
 
     // Manejo del formato estandarizado de respuesta (success, message, data, errors)
+    // Si la respuesta HTTP es 2xx, pero el cuerpo JSON indica success: false
     if (response.data && response.data.success === false) {
       let errorMessage = response.data.message || 'Ocurrió un error en la operación.';
       if (response.data.errors) {
@@ -65,12 +66,12 @@ api.interceptors.response.use(
     // Manejo de token expirado (401)
     if (status === 401) {
       console.warn("🔐 Token expirado o no autorizado. Cerrando sesión. Redirigiendo al login...");
-      // Simulación de authStore.logout()
-      localStorage.removeItem('access_token');
+      const authStore = useAuthStore(); // Obtener la instancia del store
+      authStore.logout(); // Llamar a la acción logout del store
 
-      // Redirección segura al login
-      if (window.location.pathname !== '/login') {
-        window.location.href = "/"; // Redirigir a la página principal o login
+      // Redirección segura a la página de inicio
+      if (window.location.pathname !== '/') {
+        window.location.href = "/"; 
       }
     }
 
@@ -93,7 +94,7 @@ export const apiService = {
   auth: {
     /**
      * Inicia el flujo de registro o recuperación de cuenta.
-     * @param {Object} payload - Objeto que contiene { name, email }
+     * @param {Object} payload - Objeto que contiene { firstName, email }
      * @returns {Promise<Object>}
      */
     async registerStart(payload) {
@@ -110,15 +111,34 @@ export const apiService = {
     },
   },
 
-  // Aquí se podrían añadir otros módulos de la API, por ejemplo:
-  // users: {
-  //   async getUserProfile(userId) {
-  //     return api.get(`/users/${userId}`);
-  //   },
-  // },
-  // products: {
-  //   async getProducts() {
-  //     return api.get('/products');
-  //   },
-  // },
+  // Módulo de usuario
+  user: {
+    /**
+     * Actualiza la información del perfil del usuario.
+     * @param {Object} payload - Objeto con los campos a actualizar (phone, curp, date_of_birth, address).
+     * @returns {Promise<Object>}
+     */
+    async updateProfile(payload) {
+      return api.put('/user/profile', payload);
+    },
+
+    /**
+     * Obtiene la información del perfil del usuario autenticado.
+     * @returns {Promise<Object>}
+     */
+    async getProfile() {
+      return api.get('/user');
+    }
+  },
+
+  // Nuevo módulo para documentos
+  documents: {
+    /**
+     * Obtiene la lista de tipos de documentos disponibles.
+     * @returns {Promise<Array>} - Un array de objetos de tipo de documento.
+     */
+    async getAvailableDocumentTypes() {
+      return api.get('/document-types');
+    }
+  }
 };

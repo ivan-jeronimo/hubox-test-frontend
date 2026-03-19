@@ -1,17 +1,15 @@
 <template>
   <div id="app">
-    <HomeView />
+    <!-- router-view renderizará el componente de la ruta actual -->
+    <router-view />
   </div>
 </template>
 
 <script>
-import HomeView from './views/HomeView.vue';
-
+// Ya no importamos HomeView directamente aquí, el router se encarga
 export default {
   name: 'App',
-  components: {
-    HomeView
-  }
+  // components: { HomeView } // Ya no es necesario
 };
 </script>
 

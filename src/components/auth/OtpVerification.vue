@@ -58,7 +58,7 @@ export default {
       type: String,
       required: true
     },
-    name: {
+    firstName: { // Cambiado de 'name' a 'firstName'
       type: String,
       required: true
     }
@@ -123,7 +123,7 @@ export default {
 
       try {
         // Usar apiService.auth.registerStart para reenviar
-        await apiService.auth.registerStart({ name: props.name, email: props.email });
+        await apiService.auth.registerStart({ firstName: props.firstName, email: props.email }); // Enviar firstName
         successMessage.value = 'Nuevo código enviado exitosamente.';
         startResendTimer();
         setTimeout(() => successMessage.value = '', 3000);
@@ -179,6 +179,8 @@ input {
   text-align: center;
   letter-spacing: 0.5rem;
   transition: border-color 0.2s;
+  color: #333; /* Aseguramos un color de texto oscuro */
+  background-color: #ffffff; /* Aseguramos un fondo blanco */
 }
 
 input:focus {
