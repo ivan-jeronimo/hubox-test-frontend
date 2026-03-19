@@ -1,0 +1,124 @@
+import axios from 'axios';
+
+// Define la URL base de la API. En Vite, se accede a las variables de entorno con import.meta.env
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+
+// Instancia base de Axios
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+  },
+});
+
+// Función de utilidad para simular un delay
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// 🔹 Interceptor de solicitud
+api.interceptors.request.use(
+  (config) => {
+    config.startTime = Date.now(); // Registrar tiempo de inicio
+    
+    // Simulación de authStore: obtener token de localStorage
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// 🔹 Interceptor de respuesta
+api.interceptors.response.use(
+  async (response) => {
+    const startTime = response.config.startTime || Date.now();
+    const elapsedTime = Date.now() - startTime;
+
+    // Simular un delay mínimo de 200ms para evitar flashes de carga rápidos
+    const minDelay = 200; 
+    if (elapsedTime < minDelay) {
+      await delay(minDelay - elapsedTime);
+    }
+
+    // Manejo del formato estandarizado de respuesta (success, message, data, errors)
+    if (response.data && response.data.success === false) {
+      let errorMessage = response.data.message || 'Ocurrió un error en la operación.';
+      if (response.data.errors) {
+        const validationErrors = Object.values(response.data.errors).flat().join('; ');
+        if (validationErrors) {
+          errorMessage += ` Detalles: ${validationErrors}`;
+        }
+      }
+      // Lanzar un error para que sea capturado por el catch
+      return Promise.reject(new Error(errorMessage));
+    }
+
+    // Si success es true, devolver solo el campo 'data'
+    return response.data.data;
+  },
+  (error) => {
+    const status = error.response?.status;
+    const responseData = error.response?.data;
+
+    // Manejo de token expirado (401)
+    if (status === 401) {
+      console.warn("🔐 Token expirado o no autorizado. Cerrando sesión. Redirigiendo al login...");
+      // Simulación de authStore.logout()
+      localStorage.removeItem('access_token');
+
+      // Redirección segura al login
+      if (window.location.pathname !== '/login') {
+        window.location.href = "/"; // Redirigir a la página principal o login
+      }
+    }
+
+    // Construir mensaje de error más detallado
+    let errorMessage = responseData?.message || error.message || 'Error de conexión con el servidor.';
+    if (responseData?.errors) {
+      const validationErrors = Object.values(responseData.errors).flat().join('; ');
+      if (validationErrors) {
+        errorMessage += ` Detalles: ${validationErrors}`;
+      }
+    }
+    
+    return Promise.reject(new Error(errorMessage));
+  }
+);
+
+// Exportar un objeto que contenga la instancia de Axios y los módulos específicos
+export const apiService = {
+  // Módulo de autenticación
+  auth: {
+    /**
+     * Inicia el flujo de registro o recuperación de cuenta.
+     * @param {Object} payload - Objeto que contiene { name, email }
+     * @returns {Promise<Object>}
+     */
+    async registerStart(payload) {
+      return api.post('/auth/register-start', payload);
+    },
+
+    /**
+     * Verifica el código OTP y devuelve el token JWT.
+     * @param {Object} payload - Objeto que contiene { email, code }
+     * @returns {Promise<Object>}
+     */
+    async verifyEmailCode(payload) {
+      return api.post('/auth/verify-email-code', payload);
+    },
+  },
+
+  // Aquí se podrían añadir otros módulos de la API, por ejemplo:
+  // users: {
+  //   async getUserProfile(userId) {
+  //     return api.get(`/users/${userId}`);
+  //   },
+  // },
+  // products: {
+  //   async getProducts() {
+  //     return api.get('/products');
+  //   },
+  // },
+};
