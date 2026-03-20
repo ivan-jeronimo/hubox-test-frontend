@@ -6,8 +6,8 @@
       <!-- Sección Izquierda: Imagen (Desktop y Mobile) -->
       <div class="image-section col-12 lg:col-5 flex justify-content-center pl-0 pr-0" aria-hidden="true">
         <div class="circle-image-container">
-          <img src="https://images.unsplash.com/photo-1511512578047-dfb367046420?w=500&h=500&fit=crop&crop=faces" alt="Pareja con teléfono" role="presentation" class="circle-image section-desktop">
-          <img src="https://placehold.co/400x300/e0e0e0/002855?text=Imagen+Mobile" alt="Pareja con teléfono" role="presentation" class="circle-image section-mobile" style="display: none;">
+          <img :src="hiredImage" alt="Persona en un proceso de contratación" role="presentation" class="circle-image section-desktop">
+          <img :src="hiredImage" alt="Persona en un proceso de contratación" role="presentation" class="circle-image section-mobile" style="display: none;">
         </div>
       </div>
 
@@ -77,6 +77,8 @@ import AppHeader from '../components/layout/AppHeader.vue';
 import AppFooter from '../components/layout/AppFooter.vue';
 import RegisterForm from '../components/auth/RegisterForm.vue';
 import OtpVerification from '../components/auth/OtpVerification.vue';
+import hiredImage from '@/assets/hired.png';
+
 
 export default {
   name: 'HomeView',
@@ -103,20 +105,15 @@ export default {
     };
 
     const handleVerificationSuccess = async (data) => {
-      console.log('Token recibido:', data.accessToken);
-
       authStore.setAuth(null, data.accessToken);
 
       try {
         const userProfile = await apiService.user.getProfile();
-        console.log('Perfil de usuario obtenido:', userProfile);
         authStore.setUser(userProfile);
-
         router.push({ name: 'profile' });
       } catch (error) {
         console.error("Error al obtener el perfil del usuario después de la verificación:", error);
         authStore.logout();
-        alert('Error al cargar el perfil. Por favor, intente de nuevo.');
         router.push({ name: 'home' });
       }
     };
@@ -125,7 +122,8 @@ export default {
       step,
       userData,
       handleRegisterSuccess,
-      handleVerificationSuccess
+      handleVerificationSuccess,
+      hiredImage
     };
   }
 };

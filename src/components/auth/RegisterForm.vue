@@ -64,7 +64,7 @@
 </template>
 
 <script>
-import { reactive, ref, computed, onUnmounted } from 'vue'; // onMounted ya no es necesario para reCAPTCHA init
+import { reactive, ref, computed, onUnmounted } from 'vue';
 import { apiService } from '../../services/apiService';
 
 export default {
@@ -78,9 +78,14 @@ export default {
     const formSubmitted = ref(false);
 
     // reCAPTCHA v3
-    const recaptchaToken = ref(null); // Almacenará el token de reCAPTCHA v3
+    const recaptchaToken = ref(null);
 
-    const RECAPTCHA_SITE_KEY = '6Lesho8sAAAAAHRtx-54-9x_yKJH8TqiYyPGtQo6';
+    const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+
+    if (!RECAPTCHA_SITE_KEY) {
+      console.error("VITE_RECAPTCHA_SITE_KEY no está definida en el archivo .env");
+      error.value = "Error de configuración: Clave de reCAPTCHA no encontrada.";
+    }
 
     onUnmounted(() => {
       recaptchaToken.value = null;
@@ -102,7 +107,7 @@ export default {
       }
 
       isLoading.value = true;
-      formSubmitted.value = true; // Marcar como enviado aquí
+      formSubmitted.value = true;
 
       try {
         // Ejecutar reCAPTCHA v3 para obtener un token
@@ -118,7 +123,7 @@ export default {
           }
         });
 
-        recaptchaToken.value = token; // Guardar el token obtenido
+        recaptchaToken.value = token;
 
         if (!recaptchaToken.value) {
           error.value = 'No se pudo obtener el token de reCAPTCHA. Por favor, inténtalo de nuevo.';
@@ -129,14 +134,14 @@ export default {
         await apiService.auth.registerStart({
           firstName: form.firstName,
           email: form.email,
-          recaptchaToken: recaptchaToken.value, // Enviar el token de reCAPTCHA al backend
-          action: 'REGISTER' // Enviar la acción al backend
+          recaptchaToken: recaptchaToken.value,
+          action: 'REGISTER'
         });
         emit('register-success', { name: form.firstName, email: form.email });
       } catch (err) {
         console.error("Error al registrar:", err);
         error.value = err.message || 'Ocurrió un error al procesar la solicitud.';
-        recaptchaToken.value = null; // Limpiar el token en caso de error
+        recaptchaToken.value = null;
       } finally {
         isLoading.value = false;
       }

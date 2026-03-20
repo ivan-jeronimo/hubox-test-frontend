@@ -35,7 +35,7 @@ export const useAuthStore = defineStore("auth", {
         try {
           await apiService.auth.logout(); // Llamada al endpoint de logout
         } catch (error) {
-          console.error("❌ Error al invalidar token en el backend:", error);
+          console.error("Error al invalidar token en el backend:", error);
           // No bloqueamos el logout local aunque falle el backend
         }
       }
@@ -73,7 +73,7 @@ export const useAuthStore = defineStore("auth", {
           }
         }
       } catch (error) {
-        console.error("❌ Error hidratando authStore desde localStorage:", error);
+        console.error("Error hidratando authStore desde localStorage:", error);
         this.logout(); // Si hay un error al parsear, mejor limpiar
       }
     },
@@ -105,7 +105,7 @@ export const useAuthStore = defineStore("auth", {
       } catch (error) {
         // Si la llamada a getProfile falla (ej. 401 por token expirado),
         // el interceptor de Axios ya debería haber llamado a logout.
-        console.error("❌ Error verificando token con el backend:", error);
+        console.error("Error verificando token con el backend:", error);
         // Asegurarse de que el estado esté limpio si el interceptor no lo hizo por alguna razón
         if (this.token) { // Si todavía hay un token, significa que el error no fue 401 o el interceptor falló
           this.logout();

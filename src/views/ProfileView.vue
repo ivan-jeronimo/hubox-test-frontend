@@ -7,31 +7,39 @@
         <h1 class="text-center">Mi Perfil de Usuario</h1>
         <p class="text-center">Completa tus datos básicos y sube tus documentos para validar tu información.</p>
 
-        <!-- Pestañas de navegación -->
-        <div class="tabs-navigation">
-          <button
-            :class="{ 'tab-button': true, 'active': activeTab === 'personal' }"
-            @click="activeTab = 'personal'"
-          >
-            Datos Personales
-          </button>
-          <button
-            :class="{ 'tab-button': true, 'active': activeTab === 'documents' }"
-            @click="activeTab = 'documents'"
-          >
-            Documentos Oficiales
-          </button>
+        <!-- Contenido condicional: solo se muestra si el usuario está autenticado -->
+        <div v-if="authStore.isAuthenticated && authStore.user">
+          <!-- Pestañas de navegación -->
+          <div class="tabs-navigation">
+            <button
+              :class="{ 'tab-button': true, 'active': activeTab === 'personal' }"
+              @click="activeTab = 'personal'"
+            >
+              Datos Personales
+            </button>
+            <button
+              :class="{ 'tab-button': true, 'active': activeTab === 'documents' }"
+              @click="activeTab = 'documents'"
+            >
+              Documentos Oficiales
+            </button>
+          </div>
+
+          <!-- Contenido de las pestañas -->
+          <div class="tab-panel-content">
+            <ProfileForm
+              v-if="activeTab === 'personal'"
+              :initialUserData="authStore.user"
+            />
+            <DocumentUploadForm
+              v-if="activeTab === 'documents'"
+            />
+          </div>
         </div>
 
-        <!-- Contenido de las pestañas (ahora dentro de un contenedor con estilos de tarjeta) -->
-        <div class="tab-panel-content">
-          <ProfileForm
-            v-if="activeTab === 'personal'"
-            :initialUserData="authStore.user"
-          />
-          <DocumentUploadForm
-            v-if="activeTab === 'documents'"
-          />
+        <!-- Mensaje alternativo si el usuario no está autenticado -->
+        <div v-else class="text-center pa-4">
+          <p>Por favor, inicia sesión para ver tu perfil.</p>
         </div>
       </div>
     </main>
@@ -41,7 +49,7 @@
 </template>
 
 <script>
-import { ref, onMounted, watch } from 'vue'; // Importar 'watch'
+import { ref, onMounted, watch } from 'vue';
 import AppHeader from '../components/layout/AppHeader.vue';
 import AppFooter from '../components/layout/AppFooter.vue';
 import ProfileForm from '../components/user/ProfileForm.vue';
@@ -59,38 +67,26 @@ export default {
   },
   setup() {
     const authStore = useAuthStore();
-    const activeTab = ref('personal'); // Valor por defecto
+    const activeTab = ref('personal');
 
-    // Cargar la pestaña activa desde localStorage al montar el componente
     onMounted(async () => {
       const storedTab = localStorage.getItem('profileActiveTab');
       if (storedTab) {
         activeTab.value = storedTab;
       }
 
-      console.log('ProfileView Mounted: authStore.isAuthenticated =', authStore.isAuthenticated);
-      console.log('ProfileView Mounted: authStore.user =', authStore.user);
-
       const isUserEmpty = !authStore.user || (typeof authStore.user === 'object' && Object.keys(authStore.user).length === 0);
 
       if (authStore.isAuthenticated && isUserEmpty) {
-        console.log('ProfileView: authStore.user está vacío, intentando obtener perfil de la API...');
         try {
           const userProfile = await apiService.user.getProfile();
           authStore.setUser(userProfile);
-          console.log('ProfileView: Perfil de usuario obtenido y guardado en el store:', userProfile);
         } catch (error) {
-          console.error("ProfileView: Error al cargar el perfil del usuario al montar la vista:", error);
-          // authStore.logout(); // Descomentar si se quiere desloguear en caso de error al cargar perfil
+          console.error("Error al cargar el perfil del usuario:", error);
         }
-      } else if (authStore.isAuthenticated && !isUserEmpty) {
-        console.log('ProfileView: Usuario autenticado y datos de usuario ya presentes en el store.');
-      } else {
-        console.log('ProfileView: Usuario no autenticado o no se cumplen las condiciones para cargar el perfil.');
       }
     });
 
-    // Guardar la pestaña activa en localStorage cada vez que cambie
     watch(activeTab, (newValue) => {
       localStorage.setItem('profileActiveTab', newValue);
     });
@@ -185,5 +181,9 @@ p {
 
 .tab-panel-content {
   padding: 2rem;
+}
+
+.pa-4 {
+  padding: 1.5rem;
 }
 </style>
