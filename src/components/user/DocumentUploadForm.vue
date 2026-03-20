@@ -1,7 +1,7 @@
 <template>
   <div class="document-upload-inner">
     <h2>Carga de Documentos Oficiales</h2>
-    <p class="instruction-text">Aquí podrás subir tus documentos (DNI, Pasaporte, etc.) para la validación de tu identidad (KYC).</p>
+    <p class="instruction-text">Aquí podrás subir tus documentos (CURP, Credencial de elector.) para la validación de tu identidad.</p>
 
     <p v-if="initialError" class="error-message">{{ initialError }}</p>
 
