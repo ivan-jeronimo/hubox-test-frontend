@@ -25,11 +25,9 @@
           <img v-else src="https://placehold.co/150x100/e0e0e0/002855?text=CURP" alt="CURP Placeholder" class="placeholder-image">
         </div>
 
-        <!-- Eliminado el input de Número de CURP -->
-
         <div class="upload-area-small">
           <label :for="`file-CURP_CERTIFICATE`" class="upload-button">
-            {{ documentsState.CURP_CERTIFICATE.selectedFile ? documentsState.CURP_CERTIFICATE.selectedFile.name : 'Seleccionar Archivo' }}
+            {{ documentsState.CURP_CERTIFICATE.uploadedDoc ? 'Reemplazar' : (documentsState.CURP_CERTIFICATE.selectedFile ? documentsState.CURP_CERTIFICATE.selectedFile.name : 'Seleccionar Archivo') }}
           </label>
           <input type="file" :id="`file-CURP_CERTIFICATE`" @change="handleFileUpload($event, 'CURP_CERTIFICATE')" accept=".pdf,.jpg,.jpeg,.png" style="display: none;">
           <button
@@ -60,11 +58,9 @@
             <img v-else src="https://placehold.co/150x100/e0e0e0/002855?text=INE+Frente" alt="INE Frente Placeholder" class="placeholder-image">
           </div>
 
-          <!-- Eliminado el input de Número de INE -->
-
           <div class="upload-area-small">
             <label :for="`file-INE_FRONT`" class="upload-button">
-              {{ documentsState.INE_FRONT.selectedFile ? documentsState.INE_FRONT.selectedFile.name : 'Seleccionar Archivo' }}
+              {{ documentsState.INE_FRONT.uploadedDoc ? 'Reemplazar' : (documentsState.INE_FRONT.selectedFile ? documentsState.INE_FRONT.selectedFile.name : 'Seleccionar Archivo') }}
             </label>
             <input type="file" :id="`file-INE_FRONT`" @change="handleFileUpload($event, 'INE_FRONT')" accept=".jpg,.jpeg,.png" style="display: none;">
             <button
@@ -78,6 +74,7 @@
           <p v-if="documentsState.INE_FRONT.uploadError" class="error-message">{{ documentsState.INE_FRONT.uploadError }}</p>
           <p v-if="documentsState.INE_FRONT.uploadSuccess" class="success-message">{{ documentsState.INE_FRONT.uploadSuccess }}</p>
         </div>
+
 
         <!-- Sección para Credencial de Elector (INE) - Reverso -->
         <div class="document-section document-section-inline">
@@ -94,11 +91,9 @@
             <img v-else src="https://placehold.co/150x100/e0e0e0/002855?text=INE+Reverso" alt="INE Reverso Placeholder" class="placeholder-image">
           </div>
 
-          <!-- Eliminado el input de Número de INE -->
-
           <div class="upload-area-small">
             <label :for="`file-INE_BACK`" class="upload-button">
-              {{ documentsState.INE_BACK.selectedFile ? documentsState.INE_BACK.selectedFile.name : 'Seleccionar Archivo' }}
+              {{ documentsState.INE_BACK.uploadedDoc ? 'Reemplazar' : (documentsState.INE_BACK.selectedFile ? documentsState.INE_BACK.selectedFile.name : 'Seleccionar Archivo') }}
             </label>
             <input type="file" :id="`file-INE_BACK`" @change="handleFileUpload($event, 'INE_BACK')" accept=".jpg,.jpeg,.png" style="display: none;">
             <button
@@ -127,21 +122,18 @@ export default {
     const loadingInitialData = ref(true);
     const initialError = ref('');
 
-    // Mapeo de códigos de documento a IDs de la API
     const apiDocumentTypeIds = reactive({});
 
-    // Estado para cada tipo de documento que queremos mostrar
     const documentsState = reactive({
       CURP_CERTIFICATE: {
-        id: null, // ID de la API
+        id: null,
         name: 'Certificado de CURP',
         code: 'CURP_CERTIFICATE',
-        // documentNumber: '', // Eliminado
         selectedFile: null,
         isUploading: false,
         uploadError: '',
         uploadSuccess: '',
-        uploadedDoc: null, // Documento ya subido por el usuario
+        uploadedDoc: null,
         allowedFileTypes: ['image/jpeg', 'image/png', 'application/pdf'],
         accept: '.pdf,.jpg,.jpeg,.png'
       },
@@ -149,7 +141,6 @@ export default {
         id: null,
         name: 'Credencial de Elector (INE) - Frente',
         code: 'INE_FRONT',
-        // documentNumber: '', // Eliminado
         selectedFile: null,
         isUploading: false,
         uploadError: '',
@@ -162,7 +153,6 @@ export default {
         id: null,
         name: 'Credencial de Elector (INE) - Reverso',
         code: 'INE_BACK',
-        // documentNumber: '', // Eliminado
         selectedFile: null,
         isUploading: false,
         uploadError: '',
@@ -171,19 +161,17 @@ export default {
         allowedFileTypes: ['image/jpeg', 'image/png'],
         accept: '.jpg,.jpeg,.png'
       },
-      // Podrías añadir más tipos aquí si fuera necesario
     });
 
     const MAX_FILE_SIZE_MB = 5;
 
-    // Función para cargar los tipos de documentos de la API
     const loadDocumentTypes = async () => {
       try {
         const response = await apiService.documents.getAvailableDocumentTypes();
         response.forEach(docType => {
           if (documentsState[docType.code]) {
             documentsState[docType.code].id = docType.id;
-            apiDocumentTypeIds[docType.code] = docType.id; // Mapeo para referencia rápida
+            apiDocumentTypeIds[docType.code] = docType.id;
           }
         });
       } catch (error) {
@@ -192,17 +180,12 @@ export default {
       }
     };
 
-    // Función para cargar los documentos ya subidos por el usuario
     const loadUploadedDocuments = async () => {
       try {
         const response = await apiService.documents.getUserDocuments();
         response.forEach(uploadedDoc => {
           if (documentsState[uploadedDoc.documentType.code]) {
             documentsState[uploadedDoc.documentType.code].uploadedDoc = uploadedDoc;
-            // Si ya hay un documento subido, pre-llenar el número si existe
-            // if (uploadedDoc.documentNumber) { // Eliminado
-            //   documentsState[uploadedDoc.documentType.code].documentNumber = uploadedDoc.documentNumber; // Eliminado
-            // }
           }
         });
       } catch (error) {
@@ -226,13 +209,11 @@ export default {
       const file = event.target.files[0];
 
       if (file) {
-        // Validar tipo de archivo
         if (!docTypeState.allowedFileTypes.includes(file.type)) {
           docTypeState.uploadError = `Tipo de archivo no permitido: ${file.name}. Solo se aceptan ${docTypeState.allowedFileTypes.map(t => t.split('/')[1].toUpperCase()).join(', ')}.`;
           docTypeState.selectedFile = null;
           return;
         }
-        // Validar tamaño de archivo
         if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
           docTypeState.uploadError = `El archivo ${file.name} excede el tamaño máximo de ${MAX_FILE_SIZE_MB} MB.`;
           docTypeState.selectedFile = null;
@@ -242,7 +223,7 @@ export default {
       } else {
         docTypeState.selectedFile = null;
       }
-      event.target.value = ''; // Limpiar el input de archivo
+      event.target.value = '';
     };
 
     const uploadDocument = async (docCode) => {
@@ -264,16 +245,14 @@ export default {
 
       const formData = new FormData();
       formData.append('documentTypeId', docTypeState.id);
-      // Eliminado: if (docTypeState.documentNumber) { formData.append('documentNumber', docTypeState.documentNumber); }
       formData.append('file', docTypeState.selectedFile);
 
       try {
         await apiService.documents.uploadDocument(formData);
         docTypeState.uploadSuccess = 'Documento subido exitosamente para revisión.';
 
-        // Limpiar formulario de subida y recargar documentos
         docTypeState.selectedFile = null;
-        await loadUploadedDocuments(); // Recargar la lista completa para actualizar el estado
+        await loadUploadedDocuments();
       } catch (err) {
         console.error(`Error al subir ${docCode}:`, err);
         docTypeState.uploadError = err.message || 'Ocurrió un error al subir el documento.';
@@ -339,7 +318,7 @@ h2 {
 }
 
 .document-section {
-  flex: 1 1 100%; /* Por defecto, ocupa todo el ancho */
+  flex: 1 1 100%;
   background-color: #f9f9f9;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
@@ -354,18 +333,18 @@ h2 {
   display: flex;
   flex-wrap: wrap;
   gap: 1.5rem;
-  width: 100%; /* Ocupa todo el ancho para contener los dos INE */
+  width: 100%;
   justify-content: center;
 }
 
 .document-section-inline {
-  flex: 1 1 calc(50% - 0.75rem); /* Dos columnas en desktop, ajusta el gap */
-  min-width: 280px; /* Ancho mínimo para evitar que se aplasten */
+  flex: 1 1 calc(50% - 0.75rem);
+  min-width: 280px;
 }
 
 @media (max-width: 768px) {
   .document-section-inline {
-    flex: 1 1 100%; /* En móvil, ocupan todo el ancho */
+    flex: 1 1 100%;
   }
 }
 
@@ -378,7 +357,7 @@ h2 {
 
 .document-preview-area {
   width: 100%;
-  height: 150px; /* Altura fija para las previsualizaciones */
+  height: 150px;
   background-color: #e9ecef;
   border: 1px solid #dee2e6;
   border-radius: 4px;
@@ -393,7 +372,7 @@ h2 {
 .placeholder-image, .uploaded-image-preview {
   max-width: 100%;
   max-height: 100%;
-  object-fit: contain; /* Asegura que la imagen se ajuste sin recortarse */
+  object-fit: contain;
 }
 
 .uploaded-file-icon {
