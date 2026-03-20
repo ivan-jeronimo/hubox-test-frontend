@@ -83,8 +83,13 @@
           v-model="form.date_of_birth"
           type="date"
           class="form-input"
+          :max="maxDate"
+          min="1924-01-01"
           required
         />
+        <p v-if="dateOfBirthError" class="validation-error">
+          {{ dateOfBirthError }}
+        </p>
       </div>
       <div class="form-group">
         <label for="address">Dirección:</label>
@@ -114,7 +119,7 @@
 </template>
 
 <script>
-import { reactive, ref, watchEffect, computed } from 'vue'; // Importar computed
+import { reactive, ref, watchEffect, computed } from 'vue';
 import { apiService } from '../../services/apiService';
 import { useAuthStore } from '../../stores/auth';
 
@@ -140,18 +145,36 @@ export default {
     const error = ref('');
     const successMessage = ref('');
 
-    // Expresión regular para validar CURP (18 caracteres alfanuméricos, formato estándar)
-    // Fuente: https://regexr.com/3c0s3 (adaptada para ser más permisiva con letras y números)
     const curpRegex = /^[A-Z]{4}\d{6}[HM][A-Z]{5}[0-9A-Z]{2}$/i;
 
-    // Propiedad computada para validar el CURP
     const isCurpValid = computed(() => {
-      // Si el campo está vacío, no se valida el formato aquí, sino en isFormValid.
       if (!form.curp) return true;
       return curpRegex.test(form.curp);
     });
 
-    // Propiedad computada para validar todo el formulario antes de enviar
+    const maxDate = computed(() => new Date().toISOString().split("T")[0]);
+
+    const dateOfBirthError = computed(() => {
+      if (!form.date_of_birth) return '';
+      const today = new Date();
+      const birthDate = new Date(form.date_of_birth);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+
+      if (age < 18) {
+        return 'Debes ser mayor de 18 años.';
+      }
+      if (birthDate.getFullYear() < 1924) {
+        return 'La fecha de nacimiento no es válida.';
+      }
+      return '';
+    });
+
+    const isDateOfBirthValid = computed(() => dateOfBirthError.value === '');
+
     const isFormValid = computed(() => {
       return (
         form.paternalSurname.trim() !== '' &&
@@ -159,6 +182,7 @@ export default {
         form.curp.trim() !== '' &&
         isCurpValid.value &&
         form.date_of_birth.trim() !== '' &&
+        isDateOfBirthValid.value &&
         form.address.trim() !== ''
       );
     });
@@ -167,7 +191,6 @@ export default {
       if (props.initialUserData) {
         form.paternalSurname = props.initialUserData.paternalSurname || '';
         form.maternalSurname = props.initialUserData.maternalSurname || '';
-
         form.phone = props.initialUserData.phone || '';
         form.curp = props.initialUserData.curp || '';
         form.date_of_birth = props.initialUserData.dateOfBirth ? new Date(props.initialUserData.dateOfBirth).toISOString().split('T')[0] : '';
@@ -180,7 +203,6 @@ export default {
       error.value = '';
       successMessage.value = '';
 
-      // Si el formulario no es válido, detener el envío
       if (!isFormValid.value) {
         error.value = 'Por favor, completa todos los campos requeridos y corrige los errores.';
         isLoading.value = false;
@@ -192,14 +214,10 @@ export default {
       );
 
       try {
-        // Primero, enviar la actualización del perfil
         await apiService.user.updateProfile(payload);
         successMessage.value = 'Perfil de usuario actualizado exitosamente.';
-
-        // Luego, obtener los datos actualizados del usuario
         const updatedUser = await apiService.user.getProfile();
-        authStore.setUser(updatedUser); // Actualizar el store con los datos frescos
-
+        authStore.setUser(updatedUser);
       } catch (err) {
         console.error("Error al actualizar perfil:", err);
         error.value = err.message || 'Ocurrió un error al actualizar el perfil.';
@@ -213,8 +231,11 @@ export default {
       isLoading,
       error,
       successMessage,
-      isCurpValid, // Exportar para usar en el template
-      isFormValid, // Exportar para deshabilitar el botón
+      isCurpValid,
+      maxDate,
+      dateOfBirthError,
+      isDateOfBirthValid,
+      isFormValid,
       submitProfile
     };
   }
