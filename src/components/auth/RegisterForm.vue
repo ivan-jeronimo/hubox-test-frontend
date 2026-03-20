@@ -4,36 +4,56 @@
       <div class="form-group">
         <label for="firstName">Nombre Principal:</label>
         <input
-          id="firstName"
-          v-model="form.firstName"
-          type="text"
-          placeholder="Ej. Juan Pablo"
-          required
+            id="firstName"
+            v-model="form.firstName"
+            type="text"
+            placeholder="Ej. Juan Pablo"
+            required
         />
       </div>
       <div class="form-group">
         <label for="email">Correo Electrónico:</label>
         <input
-          id="email"
-          v-model="form.email"
-          type="email"
-          placeholder="ejemplo@correo.com"
-          required
+            id="email"
+            v-model="form.email"
+            type="email"
+            placeholder="ejemplo@correo.com"
+            required
         />
+      </div>
+
+      <!-- Checkbox de Términos y Condiciones -->
+      <div class="form-group checkbox-group">
+        <input
+            type="checkbox"
+            id="termsAccepted"
+            v-model="termsAccepted"
+            required
+        />
+        <label for="termsAccepted" class="checkbox-label">
+          Acepto los <a href="#" target="_blank" rel="noopener noreferrer">Términos y Condiciones</a>
+        </label>
+      </div>
+
+      <!-- reCAPTCHA v3 no tiene un widget visible, solo un mensaje de validación si falla -->
+      <div class="form-group recaptcha-group">
+        <p v-if="formSubmitted && !recaptchaToken" class="validation-error">
+          La verificación de reCAPTCHA ha fallado.
+        </p>
       </div>
 
       <div class="button-group">
         <button
-          type="submit"
-          class="continue-btn btn-blue"
-          :disabled="!isValid || isLoading"
+            type="submit"
+            class="continue-btn btn-blue"
+            :disabled="!isFormReadyToSubmit || isLoading"
         >
           {{ isLoading ? 'Enviando...' : 'Enviar' }}
         </button>
         <button
-          type="button"
-          class="continue-btn btn-white"
-          @click="$emit('cancel')"
+            type="button"
+            class="continue-btn btn-white"
+            @click="$emit('cancel')"
         >
           Cancelar
         </button>
@@ -44,35 +64,79 @@
 </template>
 
 <script>
-import { reactive, ref, computed } from 'vue';
-import { apiService } from '../../services/apiService'; // Importar el objeto apiService
+import { reactive, ref, computed, onUnmounted } from 'vue'; // onMounted ya no es necesario para reCAPTCHA init
+import { apiService } from '../../services/apiService';
 
 export default {
   name: 'RegisterForm',
   emits: ['register-success', 'cancel'],
   setup(props, { emit }) {
-    const form = reactive({ firstName: '', email: '' }); // Cambiado 'name' a 'firstName'
+    const form = reactive({ firstName: '', email: '' });
+    const termsAccepted = ref(false);
     const isLoading = ref(false);
     const error = ref('');
+    const formSubmitted = ref(false);
 
-    const isValid = computed(() => {
-      return form.firstName.trim() !== '' && form.email.trim() !== ''; // Validar firstName
+    // reCAPTCHA v3
+    const recaptchaToken = ref(null); // Almacenará el token de reCAPTCHA v3
+
+    const RECAPTCHA_SITE_KEY = '6Lesho8sAAAAAHRtx-54-9x_yKJH8TqiYyPGtQo6';
+
+    onUnmounted(() => {
+      recaptchaToken.value = null;
+    });
+
+    const isFormReadyToSubmit = computed(() => {
+      return (
+          form.firstName.trim() !== '' &&
+          form.email.trim() !== '' &&
+          termsAccepted.value
+      );
     });
 
     const submitRegister = async () => {
-      isLoading.value = true;
       error.value = '';
+      if (!isFormReadyToSubmit.value) {
+        error.value = 'Por favor, completa el nombre, correo y acepta los términos.';
+        return;
+      }
+
+      isLoading.value = true;
+      formSubmitted.value = true; // Marcar como enviado aquí
 
       try {
-        // Usar apiService.auth.registerStart con el payload correcto
-        await apiService.auth.registerStart({
-          firstName: form.firstName, // Enviar firstName
-          email: form.email
+        // Ejecutar reCAPTCHA v3 para obtener un token
+        const token = await new Promise((resolve, reject) => {
+          if (typeof window.grecaptcha !== 'undefined' && typeof window.grecaptcha.execute === 'function') {
+            window.grecaptcha.ready(() => {
+              window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: 'REGISTER' })
+                  .then(resolve)
+                  .catch(reject);
+            });
+          } else {
+            reject(new Error("reCAPTCHA API no está disponible para ejecución."));
+          }
         });
-        emit('register-success', { name: form.firstName, email: form.email }); // Emitir firstName como 'name' para compatibilidad
+
+        recaptchaToken.value = token; // Guardar el token obtenido
+
+        if (!recaptchaToken.value) {
+          error.value = 'No se pudo obtener el token de reCAPTCHA. Por favor, inténtalo de nuevo.';
+          isLoading.value = false;
+          return;
+        }
+
+        await apiService.auth.registerStart({
+          firstName: form.firstName,
+          email: form.email,
+          recaptchaToken: recaptchaToken.value, // Enviar el token de reCAPTCHA al backend
+          action: 'REGISTER' // Enviar la acción al backend
+        });
+        emit('register-success', { name: form.firstName, email: form.email });
       } catch (err) {
         console.error("Error al registrar:", err);
         error.value = err.message || 'Ocurrió un error al procesar la solicitud.';
+        recaptchaToken.value = null; // Limpiar el token en caso de error
       } finally {
         isLoading.value = false;
       }
@@ -80,10 +144,13 @@ export default {
 
     return {
       form,
+      termsAccepted,
       isLoading,
       error,
-      isValid,
-      submitRegister
+      isFormReadyToSubmit,
+      submitRegister,
+      recaptchaToken,
+      formSubmitted,
     };
   }
 };
@@ -102,7 +169,8 @@ label {
   color: #444;
 }
 
-input {
+input[type="text"],
+input[type="email"] {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid #ccc;
@@ -115,6 +183,47 @@ input {
 input:focus {
   outline: none;
   border-color: #002855;
+}
+
+/* Estilos para el checkbox */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  margin-top: -0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: auto;
+  margin-right: 0.5rem;
+}
+
+.checkbox-group .checkbox-label {
+  display: inline;
+  margin-bottom: 0;
+  font-weight: normal;
+  color: #555;
+}
+
+.checkbox-group .checkbox-label a {
+  color: #002855;
+  text-decoration: underline;
+}
+
+.checkbox-group .checkbox-label a:hover {
+  text-decoration: none;
+}
+
+/* Estilos para reCAPTCHA v3 (no hay widget visible) */
+.recaptcha-group {
+  margin-bottom: 1.5rem;
+}
+
+.validation-error {
+  color: #dc3545;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  text-align: center;
 }
 
 .button-group {
