@@ -4,29 +4,43 @@
       <path d="M0,0 L500,0 L500,50 Q250,80 0,50 Z" fill="#002855"></path>
     </svg>
     <div class="logo-container">
-      <!-- Usamos router-link para navegar a la página principal -->
       <router-link to="/">
-        <img class="cursor-pointer logo-img" src="https://placehold.co/150x40/transparent/white?text=LOGO" alt="Logo" />
+        <img class="cursor-pointer logo-img" src="https://placehold.co/150x40/transparent/white?text=Hubox-Test" alt="Logo Hubox-Test" />
       </router-link>
+    </div>
+
+    <!-- Botón de Cerrar Sesión -->
+    <div v-if="authStore.isAuthenticated" class="logout-container">
+      <button @click="handleLogout" class="logout-button">Cerrar Sesión</button>
     </div>
   </header>
 </template>
 
 <script>
-import { useRouter } from 'vue-router'; // Importar useRouter si se necesita lógica de navegación programática
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '../../stores/auth'; // Importar el store de autenticación
 
 export default {
   name: 'AppHeader',
   setup() {
-    const router = useRouter(); // Opcional: si necesitas navegar programáticamente
+    const router = useRouter();
+    const authStore = useAuthStore(); // Usar el store de autenticación
 
-    // Puedes añadir un método para navegar si el router-link no es suficiente
-    const goToHome = () => {
-      router.push('/');
+    const handleLogout = async () => {
+      try {
+        await authStore.logout();
+        // Después de cerrar sesión, redirigir a la página de inicio
+        router.push({ name: 'home' });
+      } catch (error) {
+        console.error("Error al cerrar sesión:", error);
+        // Aunque el logout del store ya limpia el estado, aquí podríamos mostrar un mensaje al usuario
+        alert('Hubo un problema al cerrar la sesión. Por favor, intente de nuevo.');
+      }
     };
 
     return {
-      goToHome // Exportar si se usa en el template
+      authStore, // Hacer el store disponible en el template
+      handleLogout
     };
   }
 };
@@ -63,5 +77,29 @@ export default {
 
 .logo-img {
   height: 40px;
+}
+
+.logout-container {
+  position: absolute;
+  top: 15px;
+  right: 5%; /* Posicionar a la derecha */
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.logout-button {
+  background-color: #dc3545; /* Rojo para cerrar sesión */
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.logout-button:hover {
+  background-color: #c82333;
 }
 </style>

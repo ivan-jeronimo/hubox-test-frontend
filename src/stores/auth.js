@@ -29,7 +29,17 @@ export const useAuthStore = defineStore("auth", {
     },
 
     // Acción para cerrar sesión
-    logout() {
+    async logout() { // Ahora es asíncrona
+      // Intentar invalidar el token en el backend
+      if (this.token) {
+        try {
+          await apiService.auth.logout(); // Llamada al endpoint de logout
+        } catch (error) {
+          console.error("❌ Error al invalidar token en el backend:", error);
+          // No bloqueamos el logout local aunque falle el backend
+        }
+      }
+
       this.user = null;
       this.token = null;
       this.isAuthenticated = false;

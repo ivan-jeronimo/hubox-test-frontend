@@ -2,7 +2,7 @@
   <footer class="footer-container">
     <div class="footer-btn-container">
       <button type="submit" class="btn-copyright">
-        ©2026 TechCorp Global S.A de C.V.
+        ©2026 Hubox-Test S.A de C.V.
       </button>
     </div>
 
@@ -19,7 +19,7 @@
     </div>
 
     <div class="footer-btn-container">
-      <img class="block cursor-pointer footer-image-logo" src="https://placehold.co/150x40/transparent/002855?text=TechCorp" alt="menuLogo">
+      <img class="block cursor-pointer footer-image-logo" src="https://placehold.co/150x40/transparent/002855?text=Hubox-Test" alt="menuLogo">
     </div>
   </footer>
 </template>

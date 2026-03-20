@@ -109,6 +109,14 @@ export const apiService = {
     async verifyEmailCode(payload) {
       return api.post('/auth/verify-email-code', payload);
     },
+
+    /**
+     * Invalida el token JWT del usuario actualmente autenticado, terminando su sesión.
+     * @returns {Promise<Object>}
+     */
+    async logout() {
+      return api.post('/auth/logout');
+    }
   },
 
   // Módulo de usuario

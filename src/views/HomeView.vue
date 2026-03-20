@@ -21,7 +21,7 @@
 
           <div class="home-subtitle-container text-center px-2">
             <p class="cb-text got-book columbia-blue center mx-auto">
-              Por disposición oficial es obligatorio registrar los servicios que tengas a tu nombre.
+              Por disposición oficial es obligatorio registrar tus datos personales.
             </p>
           </div>
 
@@ -32,9 +32,7 @@
               <button type="button" class="continue-btn mx-auto btn-blue" @click="step = 'register'">
                 Registrarme
               </button>
-              <button type="button" class="continue-btn mx-auto btn-white">
-                Consulta tus registros
-              </button>
+              <!-- Eliminado el botón "Consulta tus registros" -->
             </div>
 
             <!-- Componente Formulario de Registro -->
@@ -74,7 +72,7 @@
 import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
-import { apiService } from '../services/apiService'; // Importar apiService para getProfile
+import { apiService } from '../services/apiService';
 import AppHeader from '../components/layout/AppHeader.vue';
 import AppFooter from '../components/layout/AppFooter.vue';
 import RegisterForm from '../components/auth/RegisterForm.vue';
@@ -99,28 +97,24 @@ export default {
     });
 
     const handleRegisterSuccess = (data) => {
-      userData.firstName = data.name; // El evento emite 'name', pero es el firstName
+      userData.firstName = data.name;
       userData.email = data.email;
       step.value = 'otp';
     };
 
     const handleVerificationSuccess = async (data) => {
-      console.log('Token recibido:', data.accessToken); // Acceder a data.accessToken
+      console.log('Token recibido:', data.accessToken);
 
-      // Guardar solo el token inicialmente en el store
-      authStore.setAuth(null, data.accessToken); // user es null por ahora
+      authStore.setAuth(null, data.accessToken);
 
       try {
-        // Obtener los datos completos del usuario con una llamada adicional
         const userProfile = await apiService.user.getProfile();
         console.log('Perfil de usuario obtenido:', userProfile);
-        // Actualizar el store con el usuario completo
         authStore.setUser(userProfile);
 
         router.push({ name: 'profile' });
       } catch (error) {
         console.error("Error al obtener el perfil del usuario después de la verificación:", error);
-        // Si falla la obtención del perfil, limpiar el token y redirigir a home
         authStore.logout();
         alert('Error al cargar el perfil. Por favor, intente de nuevo.');
         router.push({ name: 'home' });
@@ -145,23 +139,18 @@ export default {
 .main-layout {
   display: flex;
   flex-direction: column;
-  min-height: 100vh; /* Todo el layout toma al menos el alto de la pantalla */
+  min-height: 100vh;
   width: 100%;
 }
 
 .main-container {
-  /* Al usar flex: 1, este contenedor crece para ocupar todo el alto disponible,
-     pero sin forzar alturas extra que causen scroll si el contenido es menor */
   flex: 1;
   display: flex;
-  flex-wrap: wrap; /* Para PrimeFlex/Grid */
-  align-items: center; /* Alinea sus dos columnas (izq y der) en el centro vertical globalmente */
-
+  flex-wrap: wrap;
+  align-items: center;
   background: transparent;
   padding: 0% 5% 0% 2%;
   margin: 0 auto;
-
-  /* Dejamos un padding superior ajustado que equivale solo a la altura de la curva del Header (~80px) */
   padding-top: calc(80px + env(safe-area-inset-top, 0));
   padding-bottom: env(safe-area-inset-bottom, 20px);
   width: 100%;
