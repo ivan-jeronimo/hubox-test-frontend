@@ -9,7 +9,7 @@ const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Accept': 'application/json',
-    'Content-Type': 'application/json',
+    // 'Content-Type': 'application/json', // Se elimina para que Axios lo maneje automáticamente con FormData
   },
 });
 
@@ -139,6 +139,24 @@ export const apiService = {
      */
     async getAvailableDocumentTypes() {
       return api.get('/document-types');
+    },
+
+    /**
+     * Sube un documento oficial.
+     * @param {FormData} formData - Objeto FormData que contiene documentTypeId, documentNumber y file.
+     * @returns {Promise<Object>}
+     */
+    async uploadDocument(formData) {
+      // Axios automáticamente establece Content-Type a multipart/form-data cuando detecta FormData
+      return api.post('/user/documents', formData);
+    },
+
+    /**
+     * Obtiene la lista de documentos subidos por el usuario.
+     * @returns {Promise<Array>} - Un array de objetos de documentos subidos.
+     */
+    async getUserDocuments() {
+      return api.get('/user/documents');
     }
   }
 };
