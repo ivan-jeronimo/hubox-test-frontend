@@ -57,6 +57,7 @@
           placeholder="+525512345678"
           maxlength="20"
           class="form-input"
+          required
         />
       </div>
       <div class="form-group">
@@ -69,6 +70,7 @@
           maxlength="18"
           class="form-input"
           :class="{ 'is-invalid': !isCurpValid && form.curp.length > 0 }"
+          required
         />
         <p v-if="!isCurpValid && form.curp.length > 0" class="validation-error">
           Formato de CURP inválido (ej. ABCD123456GHIJKLMN01)
@@ -81,6 +83,7 @@
           v-model="form.date_of_birth"
           type="date"
           class="form-input"
+          required
         />
       </div>
       <div class="form-group">
@@ -91,6 +94,7 @@
           placeholder="Calle Falsa 123, Colonia Centro, Ciudad de México"
           maxlength="255"
           class="form-input"
+          required
         ></textarea>
       </div>
 
@@ -142,19 +146,21 @@ export default {
 
     // Propiedad computada para validar el CURP
     const isCurpValid = computed(() => {
-      // Si el campo está vacío, se considera válido (es opcional)
+      // Si el campo está vacío, no se valida el formato aquí, sino en isFormValid.
       if (!form.curp) return true;
       return curpRegex.test(form.curp);
     });
 
     // Propiedad computada para validar todo el formulario antes de enviar
     const isFormValid = computed(() => {
-      // Apellido Paterno es requerido
-      if (!form.paternalSurname.trim()) return false;
-      // CURP debe ser válido si está presente
-      if (form.curp && !isCurpValid.value) return false;
-      // Aquí se pueden añadir más validaciones para otros campos si son requeridos
-      return true;
+      return (
+        form.paternalSurname.trim() !== '' &&
+        form.phone.trim() !== '' &&
+        form.curp.trim() !== '' &&
+        isCurpValid.value &&
+        form.date_of_birth.trim() !== '' &&
+        form.address.trim() !== ''
+      );
     });
 
     watchEffect(() => {
@@ -176,7 +182,7 @@ export default {
 
       // Si el formulario no es válido, detener el envío
       if (!isFormValid.value) {
-        error.value = 'Por favor, corrige los errores en el formulario.';
+        error.value = 'Por favor, completa todos los campos requeridos y corrige los errores.';
         isLoading.value = false;
         return;
       }
