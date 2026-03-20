@@ -41,7 +41,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue'; // Importar 'watch'
 import AppHeader from '../components/layout/AppHeader.vue';
 import AppFooter from '../components/layout/AppFooter.vue';
 import ProfileForm from '../components/user/ProfileForm.vue';
@@ -59,13 +59,18 @@ export default {
   },
   setup() {
     const authStore = useAuthStore();
-    const activeTab = ref('personal');
+    const activeTab = ref('personal'); // Valor por defecto
 
+    // Cargar la pestaña activa desde localStorage al montar el componente
     onMounted(async () => {
+      const storedTab = localStorage.getItem('profileActiveTab');
+      if (storedTab) {
+        activeTab.value = storedTab;
+      }
+
       console.log('ProfileView Mounted: authStore.isAuthenticated =', authStore.isAuthenticated);
       console.log('ProfileView Mounted: authStore.user =', authStore.user);
 
-      // Verificar si authStore.user es null, undefined, o un objeto vacío/array vacío
       const isUserEmpty = !authStore.user || (typeof authStore.user === 'object' && Object.keys(authStore.user).length === 0);
 
       if (authStore.isAuthenticated && isUserEmpty) {
@@ -76,15 +81,18 @@ export default {
           console.log('ProfileView: Perfil de usuario obtenido y guardado en el store:', userProfile);
         } catch (error) {
           console.error("ProfileView: Error al cargar el perfil del usuario al montar la vista:", error);
-          // Opcional: Si falla la carga del perfil, podrías querer desloguear al usuario
-          // authStore.logout();
-          // router.push({ name: 'home' });
+          // authStore.logout(); // Descomentar si se quiere desloguear en caso de error al cargar perfil
         }
       } else if (authStore.isAuthenticated && !isUserEmpty) {
         console.log('ProfileView: Usuario autenticado y datos de usuario ya presentes en el store.');
       } else {
         console.log('ProfileView: Usuario no autenticado o no se cumplen las condiciones para cargar el perfil.');
       }
+    });
+
+    // Guardar la pestaña activa en localStorage cada vez que cambie
+    watch(activeTab, (newValue) => {
+      localStorage.setItem('profileActiveTab', newValue);
     });
 
     return {
