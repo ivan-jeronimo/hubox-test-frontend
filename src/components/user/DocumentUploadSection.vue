@@ -9,20 +9,19 @@
             <img v-if="isImage(docTypeData.uploadedDoc.mimeType)"
                  :src="docTypeData.uploadedDoc.fileUrl"
                  :alt="`${docTypeData.name} Preview`" class="uploaded-image-preview">
-            <!-- Modificación aquí: para mostrar el nombre debajo del icono -->
             <div v-else class="uploaded-file-info">
               <span class="file-icon">📄</span>
               <p class="file-name">{{ docTypeData.uploadedDoc.fileName }}</p>
             </div>
           </a>
           <span :class="['status-badge', docTypeData.uploadedDoc.status]">
-            {{ docTypeData.uploadedDoc.status }}
+            {{ translatedStatus(docTypeData.uploadedDoc.status) }}
           </span>
         </template>
         <img v-else :src="placeholderImage" :alt="`${docTypeData.name} Placeholder`" class="placeholder-image">
       </div>
 
-      <div class="upload-area-small">
+      <div v-if="isUploadAllowed" class="upload-area-small">
         <label :for="`file-${docTypeData.code}`" class="upload-button">
           {{ docTypeData.uploadedDoc ? 'Reemplazar' : (docTypeData.selectedFile ? docTypeData.selectedFile.name : 'Seleccionar Archivo') }}
         </label>
@@ -35,6 +34,10 @@
           {{ docTypeData.isUploading ? 'Subiendo...' : `Subir ${docTypeData.name.split(' ')[0]}` }}
         </button>
       </div>
+      <div v-else class="upload-disabled-message">
+        <p>No se puede reemplazar un documento que está '{{ translatedStatus(docTypeData.uploadedDoc.status) }}'.</p>
+      </div>
+
       <p v-if="docTypeData.uploadError" class="error-message">{{ docTypeData.uploadError }}</p>
       <p v-if="docTypeData.uploadSuccess" class="success-message">{{ docTypeData.uploadSuccess }}</p>
     </div>
@@ -75,6 +78,23 @@ export default {
       }
     });
 
+    const isUploadAllowed = computed(() => {
+      if (!props.docTypeData.uploadedDoc) {
+        return true; // No hay documento, se permite subir.
+      }
+      return props.docTypeData.uploadedDoc.status === 'rejected';
+    });
+
+    const statusTranslations = {
+      approved: 'Aprobado',
+      pending: 'Pendiente',
+      rejected: 'Rechazado'
+    };
+
+    const translatedStatus = (status) => {
+      return statusTranslations[status] || status;
+    };
+
     const handleFileUpload = (event) => {
       const file = event.target.files[0];
       emit('file-selected', { code: props.docTypeData.code, file });
@@ -91,6 +111,8 @@ export default {
 
     return {
       placeholderImage,
+      isUploadAllowed,
+      translatedStatus,
       handleFileUpload,
       uploadDocument,
       isImage
@@ -149,7 +171,6 @@ h3 {
   object-fit: contain;
 }
 
-/* Nuevos estilos para el icono y nombre del archivo PDF */
 .uploaded-file-info {
   display: flex;
   flex-direction: column;
@@ -161,7 +182,7 @@ h3 {
 }
 
 .file-icon {
-  font-size: 3rem; /* Icono más grande */
+  font-size: 3rem;
   line-height: 1;
   margin-bottom: 5px;
 }
@@ -169,10 +190,9 @@ h3 {
 .file-name {
   font-size: 0.9rem;
   font-weight: bold;
-  word-break: break-all; /* Para nombres de archivo largos */
+  word-break: break-all;
   margin: 0;
 }
-
 
 .status-badge {
   position: absolute;
@@ -189,7 +209,6 @@ h3 {
 .status-badge.pending { background-color: #ffc107; color: #333; }
 .status-badge.approved { background-color: #28a745; }
 .status-badge.rejected { background-color: #dc3545; }
-
 
 .upload-area-small {
   display: flex;
@@ -222,6 +241,17 @@ h3 {
   padding: 0.6rem 1rem;
   font-size: 0.9rem;
   border-radius: 20px;
+}
+
+.upload-disabled-message {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  color: #6c757d;
+  font-size: 0.9rem;
+  width: 100%;
 }
 
 .error-message {
