@@ -217,6 +217,7 @@ h2 {
   color: #002855;
   margin-bottom: 1.5rem;
   margin-top: 0;
+  text-align: center; /* Añadido para centrar el texto */
 }
 
 .instruction-text {
@@ -252,5 +253,21 @@ h2 {
   gap: 1.5rem;
   width: 100%; /* Ocupa todo el ancho para contener los dos INE */
   justify-content: center;
+}
+
+/* Media Queries para Responsividad */
+
+/* Para tabletas */
+@media (max-width: 768px) {
+  h2 {
+    font-size: 1.3rem;
+  }
+}
+
+/* Para móviles */
+@media (max-width: 480px) {
+  h2 {
+    font-size: 1.2rem;
+  }
 }
 </style>

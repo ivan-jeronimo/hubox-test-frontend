@@ -340,4 +340,46 @@ textarea.form-input {
   font-size: 0.85rem;
   margin-top: 0.5rem;
 }
+
+/* Media Queries para Responsividad */
+
+/* Para tabletas */
+@media (max-width: 768px) {
+  h2 {
+    font-size: 1.3rem;
+  }
+
+  .form-input,
+  .continue-btn {
+    padding: 0.65rem;
+    font-size: 0.95rem;
+  }
+}
+
+/* Para móviles */
+@media (max-width: 480px) {
+  h2 {
+    font-size: 1.2rem;
+  }
+
+  label {
+    font-size: 0.9rem;
+  }
+
+  .form-input,
+  .continue-btn {
+    padding: 0.6rem;
+    font-size: 0.9rem;
+  }
+
+  .continue-btn {
+    padding: 0.8rem;
+  }
+
+  .error-message,
+  .success-message,
+  .validation-error {
+    font-size: 0.8rem;
+  }
+}
 </style>

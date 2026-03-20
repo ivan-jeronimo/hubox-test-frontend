@@ -102,4 +102,31 @@ export default {
 .logout-button:hover {
   background-color: #c82333;
 }
+
+/* Media Queries para Responsividad */
+
+/* Para tabletas */
+@media (max-width: 768px) {
+  .logout-button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+  .logo-img {
+    height: 35px;
+  }
+}
+
+/* Para móviles */
+@media (max-width: 480px) {
+  .logout-button {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.75rem;
+  }
+  .logo-img {
+    height: 30px;
+  }
+  .logo-container, .logout-container {
+    top: 12px;
+  }
+}
 </style>

@@ -111,9 +111,9 @@ export default {
   flex: 1;
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start; /* Alinea el contenido al inicio */
   background: transparent;
-  padding: 0% 5% 0% 2%;
+  padding: 2rem 1rem; /* Padding ajustado para móviles */
   margin: 0 auto;
   padding-top: calc(80px + env(safe-area-inset-top, 0));
   padding-bottom: env(safe-area-inset-bottom, 20px);
@@ -123,25 +123,24 @@ export default {
 
 .profile-content {
   max-width: 800px;
-  margin: 2rem auto;
+  margin: 2rem auto 0; /* Margen superior añadido */
   background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  padding-top: 2rem;
+  padding: 2rem;
+  width: 100%;
 }
 
 h1 {
   font-size: 2rem;
   color: #002855;
   margin-bottom: 1rem;
-  padding: 0 2rem;
 }
 
 p {
   font-size: 1rem;
   color: #555;
   margin-bottom: 2rem;
-  padding: 0 2rem;
 }
 
 .text-center {
@@ -154,7 +153,7 @@ p {
   margin-top: 2rem;
   margin-bottom: 0;
   border-bottom: 2px solid #e0e0e0;
-  padding: 0 2rem;
+  padding: 0;
 }
 
 .tab-button {
@@ -168,6 +167,7 @@ p {
   transition: color 0.3s ease, border-bottom-color 0.3s ease;
   border-bottom: 2px solid transparent;
   margin-bottom: -2px;
+  white-space: nowrap; /* Evita que el texto del botón se rompa */
 }
 
 .tab-button:hover {
@@ -180,10 +180,83 @@ p {
 }
 
 .tab-panel-content {
-  padding: 2rem;
+  padding: 2rem 0 0; /* Padding superior, sin padding horizontal */
 }
 
 .pa-4 {
   padding: 1.5rem;
+}
+
+/* Media Queries para Responsividad */
+
+/* Para tabletas */
+@media (max-width: 768px) {
+  .main-container {
+    padding: 1.5rem;
+    padding-top: calc(70px + env(safe-area-inset-top, 0));
+  }
+
+  .profile-content {
+    padding: 1.5rem;
+    margin: 1.5rem auto 0; /* Margen superior ajustado */
+  }
+
+  h1 {
+    font-size: 1.8rem;
+  }
+
+  p {
+    font-size: 0.95rem;
+  }
+
+  .tab-button {
+    padding: 0.8rem 1rem;
+    font-size: 1rem;
+  }
+
+  .tab-panel-content {
+    padding: 1.5rem 0 0;
+  }
+}
+
+/* Para móviles */
+@media (max-width: 480px) {
+  .main-container {
+    padding: 1rem;
+    padding-top: calc(60px + env(safe-area-inset-top, 0));
+  }
+
+  .profile-content {
+    padding: 1rem;
+    box-shadow: none; /* Sin sombra en móviles */
+    border-radius: 0;
+    margin: 1rem 0 0; /* Margen superior ajustado y sin centrado horizontal */
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  p {
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .tabs-navigation {
+    justify-content: center;
+    margin-top: 1rem;
+  }
+
+  .tab-button {
+    padding: 0.8rem;
+    font-size: 0.9rem;
+    flex-basis: 50%; /* Cada pestaña ocupa el 50% del ancho */
+    text-align: center;
+    white-space: normal; /* Permite que el texto se ajuste si es necesario */
+  }
+
+  .tab-panel-content {
+    padding: 1rem 0 0;
+  }
 }
 </style>

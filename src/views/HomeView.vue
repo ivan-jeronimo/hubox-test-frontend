@@ -12,7 +12,7 @@
       </div>
 
       <!-- Sección Derecha: Contenido y Flujo de Registro -->
-      <div class="right-panel col-12 lg:col-7 flex align-items-center justify-content-start h-full pl-0 pr-0">
+      <div class="right-panel col-12 lg:col-7 flex flex-column align-items-center pt-8 lg:pt-0 lg:h-full lg:justify-content-center pl-0 pr-0">
         <div class="container-data">
 
           <div class="home-title-container text-center">
@@ -147,7 +147,7 @@ export default {
   flex-wrap: wrap;
   align-items: center;
   background: transparent;
-  padding: 0% 5% 0% 2%;
+  padding: 0 2rem; /* Padding horizontal unificado */
   margin: 0 auto;
   padding-top: calc(80px + env(safe-area-inset-top, 0));
   padding-bottom: env(safe-area-inset-bottom, 20px);
@@ -174,14 +174,11 @@ export default {
   object-fit: cover;
 }
 
-/*
-  En vez de flex-start que empujaba todo hacia arriba,
-  usamos align-items-center para que todo vuelva al centro
-*/
 .image-section {
   display: flex;
-  align-items: center !important;
-  padding-top: 0 !important;
+  align-items: center;
+  justify-content: center; /* Centrar la imagen */
+  padding-top: 0;
 }
 
 .section-desktop {
@@ -193,20 +190,16 @@ export default {
 
 .right-panel {
   position: relative;
-  /* Centrar su contenido internamente */
   display: flex;
-  align-items: center !important;
-  padding-top: 0 !important;
+  flex-direction: column; /* Apila el contenido verticalmente */
+  align-items: center;
+  text-align: center; /* Centra el texto de los hijos */
 }
 
 .container-data {
   max-width: 500px;
   width: 100%;
   margin: 0 auto;
-}
-
-.home-title-container {
-  margin-top: 0;
 }
 
 .home-title-container h1 {
@@ -250,15 +243,6 @@ export default {
   background-color: #001a3b;
 }
 
-.btn-white {
-  background-color: white;
-  color: #002855;
-}
-
-.btn-white:hover {
-  background-color: #f0f0f0;
-}
-
 .dynamic-flow-container {
   min-height: 200px;
 }
@@ -277,6 +261,7 @@ export default {
   justify-content: center;
   gap: 1rem;
   margin-top: 2rem;
+  width: 100%; /* Ocupa todo el ancho para centrarse correctamente */
 }
 
 .pill-btn {
@@ -288,8 +273,7 @@ export default {
   text-decoration: underline;
 }
 
-/* En Desktop, el legal-bar se posiciona al fondo de right-panel
-   para no afectar el centrado vertical de container-data */
+/* En Desktop, el legal-bar se posiciona al fondo de right-panel */
 @media screen and (min-width: 992px) {
   .legal-bar {
     position: absolute;
@@ -301,26 +285,73 @@ export default {
   }
 }
 
-/* Responsive móvil */
+/* Responsive Tablet y Móvil */
 @media (max-width: 991px) {
+  .main-container {
+    padding: 1.5rem;
+    padding-top: calc(70px + 3rem + env(safe-area-inset-top, 0)); /* Aumentado el espacio superior */
+    align-items: flex-start;
+  }
   .section-desktop {
     display: none;
   }
   .section-mobile {
     display: block !important;
     border-radius: 12px;
+    max-width: 300px;
   }
   .container-data {
-    margin: 0 auto;
-    /* Evitar que toque el borde inferior si hay contenido */
-    margin-bottom: 4rem;
+    margin-bottom: 1rem;
   }
+  .home-title-container h1 {
+    font-size: 1.8rem;
+  }
+  .home-subtitle-container p {
+    font-size: 0.95rem;
+  }
+  .continue-btn {
+    padding: 0.9rem;
+    font-size: 0.95rem;
+  }
+  .form-wrapper {
+    padding: 1.25rem;
+  }
+  .legal-bar {
+    margin-top: 0.5rem;
+  }
+}
+
+/* Responsive Móvil Pequeño */
+@media (max-width: 480px) {
   .main-container {
-    padding-top: calc(80px + env(safe-area-inset-top, 0));
-    align-items: flex-start; /* En móvil sí es mejor que empiece arriba para scroll natural */
+    padding: 1rem;
+    padding-top: calc(60px + 2rem + env(safe-area-inset-top, 0)); /* Aumentado el espacio superior */
   }
-  .image-section {
-    padding-bottom: 2rem;
+  .section-mobile {
+    max-width: 220px;
+  }
+  .home-title-container h1 {
+    font-size: 1.5rem;
+  }
+  .home-subtitle-container p {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+  .continue-btn {
+    padding: 0.8rem;
+    font-size: 0.9rem;
+  }
+  .form-wrapper {
+    padding: 1rem;
+    box-shadow: none;
+  }
+  .legal-bar {
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+  }
+  .pill-btn {
+    font-size: 0.75rem;
   }
 }
 </style>

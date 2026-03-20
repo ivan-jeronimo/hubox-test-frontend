@@ -48,8 +48,8 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted } from 'vue';
-import { apiService } from '../../services/apiService'; // Importar el objeto apiService
+import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { apiService } from '../../services/apiService';
 
 export default {
   name: 'OtpVerification',
@@ -58,7 +58,7 @@ export default {
       type: String,
       required: true
     },
-    firstName: { // Cambiado de 'name' a 'firstName'
+    firstName: {
       type: String,
       required: true
     }
@@ -70,9 +70,10 @@ export default {
     const isResending = ref(false);
     const error = ref('');
     const successMessage = ref('');
-
     const resendTimer = ref(0);
     let timerInterval = null;
+
+    const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
 
     const startResendTimer = () => {
       resendTimer.value = 30;
@@ -101,7 +102,6 @@ export default {
       successMessage.value = '';
 
       try {
-        // Usar apiService.auth.verifyEmailCode
         const data = await apiService.auth.verifyEmailCode({
           email: props.email,
           code: otpCode.value
@@ -122,8 +122,24 @@ export default {
       successMessage.value = '';
 
       try {
-        // Usar apiService.auth.registerStart para reenviar
-        await apiService.auth.registerStart({ firstName: props.firstName, email: props.email }); // Enviar firstName
+        const token = await new Promise((resolve, reject) => {
+          if (typeof window.grecaptcha !== 'undefined' && typeof window.grecaptcha.execute === 'function') {
+            window.grecaptcha.ready(() => {
+              window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: 'RESEND_OTP' })
+                  .then(resolve)
+                  .catch(reject);
+            });
+          } else {
+            reject(new Error("reCAPTCHA API no está disponible."));
+          }
+        });
+
+        await apiService.auth.registerStart({
+          firstName: props.firstName,
+          email: props.email,
+          recaptchaToken: token,
+          action: 'RESEND_OTP'
+        });
         successMessage.value = 'Nuevo código enviado exitosamente.';
         startResendTimer();
         setTimeout(() => successMessage.value = '', 3000);
