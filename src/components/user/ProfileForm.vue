@@ -50,15 +50,18 @@
       <!-- Campos editables -->
       <div class="form-group">
         <label for="phone">Teléfono:</label>
-        <input
-          id="phone"
-          v-model="form.phone"
-          type="tel"
-          placeholder="+525512345678"
-          maxlength="20"
-          class="form-input"
-          required
-        />
+        <div class="phone-input-wrapper">
+          <span class="phone-prefix">+52</span>
+          <input
+            id="phone"
+            v-model="form.phone"
+            type="tel"
+            placeholder="5512345678"
+            maxlength="10"
+            class="form-input phone-input"
+            required
+          />
+        </div>
       </div>
       <div class="form-group">
         <label for="curp">CURP:</label>
@@ -179,6 +182,7 @@ export default {
       return (
         form.paternalSurname.trim() !== '' &&
         form.phone.trim() !== '' &&
+        form.phone.trim().length === 10 &&
         form.curp.trim() !== '' &&
         isCurpValid.value &&
         form.date_of_birth.trim() !== '' &&
@@ -191,7 +195,7 @@ export default {
       if (props.initialUserData) {
         form.paternalSurname = props.initialUserData.paternalSurname || '';
         form.maternalSurname = props.initialUserData.maternalSurname || '';
-        form.phone = props.initialUserData.phone || '';
+        form.phone = (props.initialUserData.phone || '').replace('+52', '');
         form.curp = props.initialUserData.curp || '';
         form.date_of_birth = props.initialUserData.dateOfBirth ? new Date(props.initialUserData.dateOfBirth).toISOString().split('T')[0] : '';
         form.address = props.initialUserData.address || '';
@@ -209,9 +213,10 @@ export default {
         return;
       }
 
-      const payload = Object.fromEntries(
-        Object.entries(form).filter(([, value]) => value !== '')
-      );
+      const payload = {
+        ...Object.fromEntries(Object.entries(form).filter(([, value]) => value !== '')),
+        phone: `+52${form.phone}`
+      };
 
       try {
         await apiService.user.updateProfile(payload);
@@ -284,6 +289,26 @@ label {
 .form-input:focus {
   outline: none;
   border-color: #002855;
+}
+
+.phone-input-wrapper {
+  display: flex;
+}
+
+.phone-prefix {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  background-color: #f8f9fa;
+  border: 1px solid #ccc;
+  border-right: none;
+  border-radius: 4px 0 0 4px;
+  color: #6c757d;
+  font-size: 1rem;
+}
+
+.phone-input {
+  border-radius: 0 4px 4px 0;
 }
 
 /* Estilo para inputs inválidos */
@@ -371,7 +396,8 @@ textarea.form-input {
   }
 
   .form-input,
-  .continue-btn {
+  .continue-btn,
+  .phone-prefix {
     padding: 0.65rem;
     font-size: 0.95rem;
   }
@@ -388,7 +414,8 @@ textarea.form-input {
   }
 
   .form-input,
-  .continue-btn {
+  .continue-btn,
+  .phone-prefix {
     padding: 0.6rem;
     font-size: 0.9rem;
   }
